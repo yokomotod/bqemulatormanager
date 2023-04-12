@@ -7,24 +7,45 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
-pyyaml = "^6.0"
-google-cloud-bigquery = "2.34.4"
-db-dtypes = "^1.0.4"
-psutil = "^5.9.3"
-
+pyyaml = "*"
+google-cloud-bigquery = "^3.0.0"
+db-dtypes = "^1.0.0"
+psutil = "^5.0.0"
+google-auth = "^2.17.2"
 
 [tool.poetry.group.dev.dependencies]
-yapf = "*"
+pyproject-flake8 = "*"
 tox = "*"
+coverage = "*"
 isort = "*"
+yapf = "*"
 toml = "*"
+mypy = "*"
+pandas-stubs = "*"
+
+[tool.flake8]
+per-file-ignores = """
+  __init__.py: F401
+"""
+max-line-length = 160
+exclude = "venv/*,tox/*"
 
 [tool.yapf]
 based_on_style = "pep8"
 column_limit = 160
 
+[tool.yapfignore]
+ignore_patterns = [
+  ".venv/*",
+  ".tox/*",
+  "examples/*"
+]
+
 [tool.isort]
 line_length = 160
+
+[tool.mypy]
+ignore_missing_imports = true
 
 [build-system]
 requires = ["poetry-core"]
