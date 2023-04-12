@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 
 import pandas as pd
 from google.api_core.client_options import ClientOptions
@@ -11,8 +11,13 @@ from bqemulatormanager.schema import SchemaManager
 
 class Manager:
 
-    def __init__(self, project: str = 'test', port: int = 9050, schema_path: str = 'master_schema.yaml',
-    launch_emulator:bool=True, debug_mode:bool=False, max_pool:int=20):
+    def __init__(self,
+                 project: str = 'test',
+                 port: int = 9050,
+                 schema_path: str = 'master_schema.yaml',
+                 launch_emulator: bool = True,
+                 debug_mode: bool = False,
+                 max_pool: int = 20):
 
         original_port = port
         for i in range(max_pool):
@@ -31,7 +36,7 @@ class Manager:
         prod_client = bigquery.Client(project)
 
         self.schema_manager = SchemaManager(client=prod_client, master_path=schema_path)
-        self.structure = {}
+        self.structure: Dict[str, Dict[str, bool]] = {}
         self.project_name = project
 
     def __enter__(self):
@@ -73,7 +78,7 @@ class Manager:
 
         table = bigquery.Table(f'{self.project_name}.{dataset_name}.{table_name}', schema=schema)
         self.client.create_table(table)
-        self.structure[dataset_name][table_name] = {}
+        self.structure[dataset_name][table_name] = True
 
     def query(self, sql: str) -> pd.DataFrame:
         return self.client.query(sql).to_dataframe(create_bqstorage_client=False)
