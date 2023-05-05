@@ -1,9 +1,14 @@
 [tool.poetry]
 name = "bqemulatormanager"
-version = "0.1.8"
-description = ""
-authors = ["gyuta <kuroshiba0408@gmail.com>"]
+version = "0.0.0"  # using poetry-dynamic-versioning
+description = "bqemulatormanager is a wrapper of bigquery-emulator which provides us BigQuery mock working in local machine."
+authors = ["gyuta <kuroshiba0408@gmail.com>", "M3, Inc."]
 readme = "README.md"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+style = "pep440"
+pattern = "^(?P<base>\\d+\\.\\d+\\.\\d+)"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
