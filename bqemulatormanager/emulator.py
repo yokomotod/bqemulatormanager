@@ -12,13 +12,12 @@ class Emulator:
         self.project_name = project_name
 
         if launch_emulator:
-            log_level = 'debug' if debug_mode else 'info'
+            log_level = "debug" if debug_mode else "info"
 
             if is_port_in_use(port):
-                raise PortOccupiedError(f'port {port} is occupied.')
+                raise PortOccupiedError(f"port {port} is occupied.")
             self.running_flg = True
-            self.proc = subprocess.Popen(["bigquery-emulator", "--project", f"{project_name}", "--port", f"{port}"
-                                          "--log-level", f"{log_level}"], shell=True)
+            self.proc = subprocess.Popen(["bigquery-emulator", "--project", f"{project_name}", "--port", f"{port}" "--log-level", f"{log_level}"], shell=True)
 
     def __del__(self):
         if self.running_flg:
@@ -27,5 +26,6 @@ class Emulator:
 
 def is_port_in_use(port: int) -> bool:
     import socket
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('localhost', port)) == 0
+        return s.connect_ex(("localhost", port)) == 0

@@ -18,8 +18,7 @@ pyproject-flake8 = "*"
 tox = "*"
 coverage = "*"
 isort = "*"
-yapf = "*"
-toml = "*"
+black = "*"
 mypy = "*"
 pandas-stubs = "*"
 
@@ -30,16 +29,9 @@ per-file-ignores = """
 max-line-length = 160
 exclude = "venv/*,tox/*"
 
-[tool.yapf]
-based_on_style = "pep8"
-column_limit = 160
-
-[tool.yapfignore]
-ignore_patterns = [
-  ".venv/*",
-  ".tox/*",
-  "examples/*"
-]
+[tool.black]
+target-version = ['py38', 'py39', 'py310', 'py311']
+line-length = 160
 
 [tool.isort]
 line_length = 160
