@@ -21,6 +21,7 @@ isort = "*"
 black = "*"
 mypy = "*"
 pandas-stubs = "*"
+flake8-unused-arguments = "^0.0.13"
 
 [tool.flake8]
 per-file-ignores = """
@@ -28,6 +29,8 @@ per-file-ignores = """
 """
 max-line-length = 160
 exclude = "venv/*,tox/*"
+# ignore methods like __enter__, __exit__
+unused-arguments-ignore-dunder = true
 
 [tool.black]
 target-version = ['py38', 'py39', 'py310', 'py311']

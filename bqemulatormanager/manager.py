@@ -69,7 +69,7 @@ class Manager:
 
     def create_dataset(self, dataset_name: str, exists_ok=True):
         dataset = bigquery.Dataset(f"{self.project_name}.{dataset_name}")
-        self.client.create_dataset(dataset)
+        self.client.create_dataset(dataset, exists_ok=exists_ok)
         self.structure[dataset_name] = {}
 
     def create_table(self, dataset_name: str, table_name: str, schema: List[bigquery.SchemaField]):
