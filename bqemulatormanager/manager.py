@@ -10,15 +10,15 @@ from bqemulatormanager.schema import SchemaManager
 
 
 class Manager:
-
-    def __init__(self,
-                 project: str = 'test',
-                 port: int = 9050,
-                 schema_path: str = 'master_schema.yaml',
-                 launch_emulator: bool = True,
-                 debug_mode: bool = False,
-                 max_pool: int = 20):
-
+    def __init__(
+        self,
+        project: str = "test",
+        port: int = 9050,
+        schema_path: str = "master_schema.yaml",
+        launch_emulator: bool = True,
+        debug_mode: bool = False,
+        max_pool: int = 20,
+    ):
         original_port = port
         for i in range(max_pool):
             port = original_port + i
@@ -29,7 +29,7 @@ class Manager:
             else:
                 break
         else:
-            raise RuntimeError(f'there is no empty port from {original_port} to {port}')
+            raise RuntimeError(f"there is no empty port from {original_port} to {port}")
 
         self.client = self._make_client(project, port)
 
@@ -57,26 +57,26 @@ class Manager:
         return client
 
     def load(self, data, path):
-        dataset, table = path.split('.')
+        dataset, table = path.split(".")
         if dataset not in self.structure:
             self.create_dataset(dataset)
 
         if table not in self.structure[dataset]:
             self.create_table(dataset, table, [])
 
-        table = self.client.get_table(f'{self.project_name}.{path}')
+        table = self.client.get_table(f"{self.project_name}.{path}")
         self.client.insert_rows_from_dataframe(table, data)
 
     def create_dataset(self, dataset_name: str, exists_ok=True):
-        dataset = bigquery.Dataset(f'{self.project_name}.{dataset_name}')
+        dataset = bigquery.Dataset(f"{self.project_name}.{dataset_name}")
         self.client.create_dataset(dataset, exists_ok=exists_ok)
         self.structure[dataset_name] = {}
 
     def create_table(self, dataset_name: str, table_name: str, schema: List[bigquery.SchemaField]):
         if schema == []:
-            schema = self.schema_manager.get_schema(f'{self.project_name}.{dataset_name}.{table_name}')
+            schema = self.schema_manager.get_schema(f"{self.project_name}.{dataset_name}.{table_name}")
 
-        table = bigquery.Table(f'{self.project_name}.{dataset_name}.{table_name}', schema=schema)
+        table = bigquery.Table(f"{self.project_name}.{dataset_name}.{table_name}", schema=schema)
         self.client.create_table(table)
         self.structure[dataset_name][table_name] = True
 

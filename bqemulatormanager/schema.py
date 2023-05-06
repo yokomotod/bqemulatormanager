@@ -6,8 +6,7 @@ from google.cloud import bigquery
 
 
 class SchemaManager:
-
-    def __init__(self, master_path: str = 'master_schema.yaml', client=None):
+    def __init__(self, master_path: str = "master_schema.yaml", client=None):
         self.client = client
         self.master_path = master_path
         self.change_flg = False
@@ -19,7 +18,7 @@ class SchemaManager:
         self.master_schema = master_schema
 
     def get_schema(self, table_id: str) -> List[bigquery.SchemaField]:
-        project, dataset, table = table_id.split('.')
+        project, dataset, table = table_id.split(".")
 
         schema = self.master_schema.get(project, {}).get(dataset, {}).get(table, {})
 
@@ -33,17 +32,17 @@ class SchemaManager:
 
     def _get_schema_from_production(self, table_id: str) -> List[bigquery.SchemaField]:
         if not self.client:
-            raise Exception('set client')
+            raise Exception("set client")
         table = self.client.get_table(table_id)
         return table.schema
 
     def save(self):
         if self.change_flg:
-            with open(self.master_path, 'w') as f:
+            with open(self.master_path, "w") as f:
                 head_msg = '# This code is generated from BigQuery table metadata by "bqemulatormanager"; DO NOT EDIT.\n'
                 f.write(head_msg)
 
-                yaml.dump(self.master_schema, f, encoding='utf8', allow_unicode=True)
+                yaml.dump(self.master_schema, f, encoding="utf8", allow_unicode=True)
 
     def __del__(self):
         self.save()
