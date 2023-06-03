@@ -36,7 +36,7 @@ class Manager:
 
         self.client = self._make_client(project, port)
 
-        prod_client = bigquery.Client(project)
+        prod_client = bigquery.Client(project, credentials=AnonymousCredentials())
 
         self.schema_manager = SchemaManager(client=prod_client, master_path=schema_path)
         self.structure: Dict[str, Dict[str, bool]] = {}
@@ -62,10 +62,10 @@ class Manager:
     def load(self, data: pd.DataFrame, path: str):
         dataset, table = path.split(".")
         if dataset not in self.structure:
-            self.create_dataset(dataset, timeout=10)
+            self.create_dataset(dataset)
 
         if table not in self.structure[dataset]:
-            self.create_table(dataset, table, [], timeout=10)
+            self.create_table(dataset, table, [])
 
         table = self.client.get_table(f"{self.project_name}.{path}")
         self.client.insert_rows_from_dataframe(table, data)
