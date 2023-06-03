@@ -27,9 +27,11 @@ jobs:
         poetry run python -m pip install tox-gh-actions
         poetry install
     - name: Install bigquery-emulator
-      uses: jaxxstorm/action-install-gh-release@v1.10.0
+      uses: supplypike/setup-bin@v3
       with:
-        repo: goccy/bigquery-emulator
+        uri: https://github.com/goccy/bigquery-emulator/releases/download/v0.3.1/bigquery-emulator-linux-amd64
+        name: bigquery-emulator
+        version: 0.3.1
     - name: Test with tox
       run: poetry run tox
     - name: Run example
