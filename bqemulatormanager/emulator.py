@@ -1,14 +1,19 @@
 import subprocess
+import time
 
 
 class PortOccupiedError(Exception):
     pass
 
 
+class EmulatorError(Exception):
+    pass
+
+
 class Emulator:
     running_flg = False
 
-    def __init__(self, project_name: str, port: int, launch_emulator: bool = True, debug_mode: bool = False):
+    def __init__(self, project_name: str, port: int, grpc_port: int, launch_emulator: bool = True, debug_mode: bool = False):
         self.project_name = project_name
 
         if launch_emulator:
@@ -16,12 +21,24 @@ class Emulator:
 
             if is_port_in_use(port):
                 raise PortOccupiedError(f"port {port} is occupied.")
+            if is_port_in_use(grpc_port):
+                raise PortOccupiedError(f"port {grpc_port} is occupied.")
             self.running_flg = True
-            self.proc = subprocess.Popen(["bigquery-emulator", "--project", f"{project_name}", "--port", f"{port}", "--log-level", f"{log_level}"], shell=True)
+            self.proc = subprocess.Popen(
+                ["bigquery-emulator", "--project", project_name, "--port", f"{port}", "--grpc-port", f"{grpc_port}", "--log-level", log_level],
+            )
+            self._wait_for_emulator(port, timeout=10)
 
     def __del__(self):
         if self.running_flg:
             self.proc.terminate()
+
+    def _wait_for_emulator(self, port: int, timeout: int):
+        for _ in range(timeout):
+            if is_port_in_use(port):
+                return
+            time.sleep(1)
+        raise EmulatorError("emulator did not start.")
 
 
 def is_port_in_use(port: int) -> bool:
