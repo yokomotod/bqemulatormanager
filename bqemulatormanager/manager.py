@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import pandas as pd
 from google.api_core.client_options import ClientOptions
@@ -14,16 +14,19 @@ class Manager:
         self,
         project: str = "test",
         port: int = 9050,
+        grpc_port: int = 9060,
         schema_path: str = "master_schema.yaml",
         launch_emulator: bool = True,
         debug_mode: bool = False,
         max_pool: int = 20,
     ):
         original_port = port
+        grpc_original_port = grpc_port
         for i in range(max_pool):
             port = original_port + i
+            grpc_port = grpc_original_port + i
             try:
-                self.emulator = Emulator(project, port, launch_emulator=launch_emulator, debug_mode=debug_mode)
+                self.emulator = Emulator(project, port, grpc_port, launch_emulator=launch_emulator, debug_mode=debug_mode)
             except PortOccupiedError as e:
                 print(e)
             else:
@@ -56,28 +59,28 @@ class Manager:
         )
         return client
 
-    def load(self, data, path):
+    def load(self, data: pd.DataFrame, path: str):
         dataset, table = path.split(".")
         if dataset not in self.structure:
-            self.create_dataset(dataset)
+            self.create_dataset(dataset, timeout=10)
 
         if table not in self.structure[dataset]:
-            self.create_table(dataset, table, [])
+            self.create_table(dataset, table, [], timeout=10)
 
         table = self.client.get_table(f"{self.project_name}.{path}")
         self.client.insert_rows_from_dataframe(table, data)
 
-    def create_dataset(self, dataset_name: str, exists_ok=True):
+    def create_dataset(self, dataset_name: str, exists_ok=True, timeout: Union[float, None] = None):
         dataset = bigquery.Dataset(f"{self.project_name}.{dataset_name}")
-        self.client.create_dataset(dataset, exists_ok=exists_ok)
+        self.client.create_dataset(dataset, exists_ok=exists_ok, timeout=timeout)
         self.structure[dataset_name] = {}
 
-    def create_table(self, dataset_name: str, table_name: str, schema: List[bigquery.SchemaField]):
+    def create_table(self, dataset_name: str, table_name: str, schema: List[bigquery.SchemaField], timeout: Union[float, None] = None):
         if schema == []:
             schema = self.schema_manager.get_schema(f"{self.project_name}.{dataset_name}.{table_name}")
 
         table = bigquery.Table(f"{self.project_name}.{dataset_name}.{table_name}", schema=schema)
-        self.client.create_table(table)
+        self.client.create_table(table, timeout=timeout)
         self.structure[dataset_name][table_name] = True
 
     def query(self, sql: str) -> pd.DataFrame:
