@@ -11,8 +11,6 @@ class EmulatorError(Exception):
 
 
 class Emulator:
-    running_flg = False
-
     def __init__(self, project_name: str, port: int, grpc_port: int, launch_emulator: bool = True, debug_mode: bool = False):
         self.project_name = project_name
 
@@ -23,15 +21,18 @@ class Emulator:
                 raise PortOccupiedError(f"port {port} is occupied.")
             if is_port_in_use(grpc_port):
                 raise PortOccupiedError(f"port {grpc_port} is occupied.")
-            self.running_flg = True
             self.proc = subprocess.Popen(
                 ["bigquery-emulator", "--project", project_name, "--port", f"{port}", "--grpc-port", f"{grpc_port}", "--log-level", log_level],
             )
             self._wait_for_emulator(port, timeout=10)
 
     def __del__(self):
-        if self.running_flg:
+        if self.proc is None:
+            return
+
+        if self.proc.poll() is None:
             self.proc.terminate()
+            self.proc.wait()
 
     def _wait_for_emulator(self, port: int, timeout: int):
         for _ in range(timeout):
