@@ -27,7 +27,7 @@ class SchemaManager:
             client of production BigQuery. If you set this, SchemaManager will fetch schema from production BigQuery.
     """
 
-    def __init__(self, schema_file_path: Optional[str] = "master_schema.yaml", client: Optional[BigQueryClient] = None):
+    def __init__(self, schema_file_path: Optional[str] = "bqem_master_schema.yaml", client: Optional[BigQueryClient] = None):
         self.__client = client
         self.__schema_file_path = schema_file_path
         self.__change_flg = False
