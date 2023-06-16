@@ -9,6 +9,10 @@ from bqemulatormanager.emulator import Emulator, PortOccupiedError
 from bqemulatormanager.schema import SchemaManager
 
 
+class ManagerError(Exception):
+    pass
+
+
 class Manager:
     def __init__(
         self,
@@ -78,6 +82,8 @@ class Manager:
     def create_table(self, dataset_name: str, table_name: str, schema: List[bigquery.SchemaField], timeout: Union[float, None] = None):
         if schema == []:
             schema = self.schema_manager.get_schema(self.project_name, dataset_name, table_name)
+            if schema is None:
+                raise ManagerError(f"schema for {dataset_name}.{table_name} is not found in master schema")
 
         table = bigquery.Table(f"{self.project_name}.{dataset_name}.{table_name}", schema=schema)
         self.client.create_table(table, timeout=timeout)
