@@ -42,7 +42,7 @@ class Manager:
 
         prod_client = bigquery.Client(project, credentials=AnonymousCredentials())
 
-        self.schema_manager = SchemaManager(client=prod_client, master_path=schema_path)
+        self.schema_manager = SchemaManager(client=prod_client, schema_file_path=schema_path)
         self.structure: Dict[str, Dict[str, bool]] = {}
         self.project_name = project
 
@@ -64,12 +64,12 @@ class Manager:
         return client
 
     def load(self, data: pd.DataFrame, path: str):
-        dataset, table = path.split(".")
+        dataset, table_id = path.split(".")
         if dataset not in self.structure:
             self.create_dataset(dataset)
 
-        if table not in self.structure[dataset]:
-            self.create_table(dataset, table, [])
+        if table_id not in self.structure[dataset]:
+            self.create_table(dataset, table_id, [])
 
         table = self.client.get_table(f"{self.project_name}.{path}")
         self.client.insert_rows_from_dataframe(table, data)
@@ -81,7 +81,7 @@ class Manager:
 
     def create_table(self, dataset_name: str, table_name: str, schema: List[bigquery.SchemaField], timeout: Union[float, None] = None):
         if schema == []:
-            schema = self.schema_manager.get_schema(f"{self.project_name}.{dataset_name}.{table_name}")
+            schema = self.schema_manager.get_schema(self.project_name, dataset_name, table_name)
             if schema is None:
                 raise ManagerError(f"schema for {dataset_name}.{table_name} is not found in master schema")
 

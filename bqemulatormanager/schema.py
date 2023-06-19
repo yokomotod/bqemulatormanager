@@ -1,48 +1,75 @@
+from __future__ import annotations
+
 import os
-from typing import List
+from typing import Any, Dict, List, Protocol
 
 import yaml
 from google.cloud import bigquery
+from google.cloud.bigquery.table import Table
+
+
+class SchemaError(Exception):
+    pass
+
+
+class BigQueryClient(Protocol):
+    def get_table(self, _table: str) -> Table:  # noqa: U101
+        pass
+
+
+TableSchema = List[Dict[str, Any]]
+DatasetSchema = Dict[str, TableSchema]
+ProjectSchema = Dict[str, DatasetSchema]
 
 
 class SchemaManager:
-    def __init__(self, master_path: str = "master_schema.yaml", client=None):
-        self.client = client
-        self.master_path = master_path
-        self.change_flg = False
-        if os.path.isfile(master_path):
-            with open(master_path) as f:
-                master_schema = yaml.safe_load(f)
-        else:
-            master_schema = {}
-        self.master_schema = master_schema
+    """
+    SchemaManager manage schema of tables in emulator.
 
-    def get_schema(self, table_id: str) -> List[bigquery.SchemaField]:
-        project, dataset, table = table_id.split(".")
+    params:
+        schema_file_path:
+            path to yaml file which contains schema of tables in emulator.
 
-        schema = self.master_schema.get(project, {}).get(dataset, {}).get(table, {})
+        client:
+            client of production BigQuery. If you set this, SchemaManager will fetch schema from production BigQuery.
+    """
 
-        if schema == {}:
-            schema = self._get_schema_from_production(table_id)
-            deepupdate(self.master_schema, {project: {dataset: {table: [s._properties for s in schema]}}})
-            self.change_flg = True
-            return schema
+    def __init__(self, schema_file_path: str | None = "bqem_master_schema.yaml", client: BigQueryClient | None = None):
+        self.__client = client
+        self.__schema_file_path = schema_file_path
+        self.__change_flg = False
+
+        master_schema: dict[str, ProjectSchema] = {}
+        if schema_file_path is not None and os.path.isfile(schema_file_path):
+            with open(schema_file_path) as f:
+                master_schema = yaml.safe_load(f) or {}
+
+        self.__master_schema: dict[str, ProjectSchema] = master_schema
+
+    def get_schema(self, project_id: str, dataset_id: str, table_id: str) -> list[bigquery.SchemaField]:
+        schema = self.__master_schema.get(project_id, {}).get(dataset_id, {}).get(table_id, [])
+
+        if len(schema) == 0:
+            result = self._get_schema_from_production(project_id, dataset_id, table_id)
+            deepupdate(self.__master_schema, {project_id: {dataset_id: {table_id: [s._properties for s in result]}}})
+            self.__change_flg = True
+            return result
         else:
             return [bigquery.SchemaField.from_api_repr(s) for s in schema]
 
-    def _get_schema_from_production(self, table_id: str) -> List[bigquery.SchemaField]:
-        if not self.client:
-            raise Exception("set client")
-        table = self.client.get_table(table_id)
+    def _get_schema_from_production(self, project_id: str, dataset_id: str, table_id: str) -> list[bigquery.SchemaField]:
+        if not self.__client:
+            raise SchemaError("client is not set")
+        table = self.__client.get_table(f"{project_id}.{dataset_id}.{table_id}")
         return table.schema
 
     def save(self):
-        if self.change_flg:
-            with open(self.master_path, "w") as f:
+        if self.__schema_file_path is not None and self.__change_flg:
+            with open(self.__schema_file_path, "w") as f:
                 head_msg = '# This code is generated from BigQuery table metadata by "bqemulatormanager"; DO NOT EDIT.\n'
                 f.write(head_msg)
 
-                yaml.dump(self.master_schema, f, encoding="utf8", allow_unicode=True)
+                yaml.dump(self.__master_schema, f, encoding="utf8", allow_unicode=True)
 
     def __del__(self):
         self.save()
