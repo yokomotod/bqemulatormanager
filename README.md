@@ -40,6 +40,6 @@ print(df)
 unit test example is [here](https://github.com/gyuta/bqemulatormanager/blob/main/examples/testing.py).
 
 ### automatically detect schema
-When called `Manager.load`, `SchemaManager` search correspond table schema from `schema_path` (default is `master_schema.yaml`).
+When called `Manager.load`, `SchemaManager` search correspond table schema from `schema_path` (default is `bqem_master_schema.yaml`).
 
-If schema definition canot be found, `SchemaManager` request it from BigQuery in production environmant and update master schema file.
+If schema definition cannot be found, `SchemaManager` request it from BigQuery in production environment and update master schema file.

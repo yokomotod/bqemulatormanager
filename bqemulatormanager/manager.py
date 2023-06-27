@@ -19,7 +19,7 @@ class Manager:
         project: str = "test",
         port: int = 9050,
         grpc_port: int = 9060,
-        schema_path: str = "master_schema.yaml",
+        schema_path: str = "bqem_master_schema.yaml",
         launch_emulator: bool = True,
         debug_mode: bool = False,
         max_pool: int = 20,
